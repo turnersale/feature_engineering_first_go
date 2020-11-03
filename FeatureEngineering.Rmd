@@ -1,0 +1,106 @@
+---
+title: "Feature Engineering"
+author: "Turner Sale"
+date: "11/9/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Plotting weight vs. MPG
+
+```{r}
+plot(mtcars$mpg, col = 'red', xlab = 'Weight of the car', ylab = 'Miles per gallon', pch = 16, main = 'Pearson Correlation')
+```
+
+Correlate these two values
+
+```{r}
+cor(mtcars, method = 'pearson')
+```
+
+Correlation test
+
+```{r}
+cor.test(x = mtcars$wt, y = mtcars$mpg)
+```
+
+Plot variable correlations
+
+```{r}
+pairs(~mpg + disp + wt + cyl, data=mtcars)
+```
+
+Iris dataset mutual information calculation
+
+```{r, error= TRUE}
+library("FSelector")
+ig_values <- information.gain(Species~., iris)
+ig_values
+```
+
+The error from above is due to incompatible Java versions (require the 64 bit version for other uses and cannot uninstall)
+
+Wrapper method
+
+```{r}
+library(caret)
+rfe_controller <- rfeControl(functions=lmFuncs, method="repeatedcv", repeats = 5, verbose = FALSE)
+size <- c(1:10) 
+lm_Profiler <- rfe(mtcars[,2:11], mtcars[,1], rfeControl = rfe_controller)
+lm_Profiler
+```
+
+Plot profiler
+
+```{r}
+plot(lm_Profiler)
+```
+
+PCA
+
+```{r}
+mtcars_feat <- mtcars[,2:11]
+mtcars_mpg <- mtcars[,1]
+mtcars_pca <- prcomp(x = mtcars_feat, scale. = T)
+mtcars_pca
+```
+
+Plot PCA
+
+```{r}
+plot(mtcars_pca)
+```
+
+Iris LDA
+
+```{r}
+library('MASS')
+head(iris)
+train <- sample(1:150, 75)
+lda_model <- lda(Species ~., data = iris, subset=train)
+lda_model$means
+```
+
+Predictions of LDA
+
+```{r}
+lda_pred <- predict(object = lda_model, newdata = iris[-train, ])
+lda_pred$class
+iris_test <- iris[-train, ]
+ggplot() + geom_point(aes(lda_pred$x[,1], lda_pred$x[,2], colour = iris_test$Species, shape = iris_test$Species), 
+size = 2.5) + ggtitle("Linear Discriminant Analysis") + xlab("LDA1") + ylab("LDA2") + labs(fill = "Species")
+```
+
+Embedded methods
+
+```{r}
+library('randomForest')
+form <- ~ wt + mpg + cyl
+rf_model <- randomForest(formula = form, data = mtcars, importance = TRUE )
+rf_model$importance
+varImpPlot(rf_model)
+```
+
